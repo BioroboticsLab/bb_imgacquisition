@@ -72,7 +72,7 @@ int ImgAcquisitionApp::checkCameras()
 	Error				error;
 	
 	error = cc_busMgr.GetNumOfCameras(&numCameras);
-	if (error != PGRERROR_OK)
+	if (error != PGRERROR_OK),
 		return -1;
 
 	qDebug() << "Number of cameras detected: " << numCameras << endl << endl;
