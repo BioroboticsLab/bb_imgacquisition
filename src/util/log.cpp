@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "log.hpp"
+#include "format.hpp"
 
 #include <mutex>
 #include <chrono>
