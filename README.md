@@ -79,10 +79,10 @@ ffmpeg -encoders | grep hevc_nvenc
 ### Clone and Build bb_imgacquisition
 
 ```bash
-git clone https://github.com/jacobdavidson/bb_imgacquisition.git
+git clone https://github.com/BioroboticsLab/bb_imgacquisition.git
 cd bb_imgacquisition
-git fetch origin basler_support_update2024
-git checkout basler_support_update2024
+git fetch origin basler_support
+git checkout basler_support
 
 mkdir build && cd build
 cmake ..
