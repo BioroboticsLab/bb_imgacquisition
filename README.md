@@ -25,6 +25,14 @@ sudo reboot
 sudo apt install nvidia-cuda-toolkit
 ```
 
+On Ubuntu 24.04, the library libtinfo5 is needed.  Then install cuda-toolkit
+```bash
+wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb
+sudo apt install cuda-toolkit
+```
+
+
 The ffnvcodec is also needed.  The install instructions can also be found [on Nvidia's website](https://docs.nvidia.com/video-technologies/video-codec-sdk/11.1/ffmpeg-with-nvidia-gpu/index.html#setup) or [here](https://www.cyberciti.biz/faq/how-to-install-ffmpeg-with-nvidia-gpu-acceleration-on-linux/).
 
 ```bash
@@ -37,9 +45,8 @@ cd ..
 ### Install Pylon (Basler Cameras)
 
 Download and install Pylon for Basler cameras:
-Can download from the [Basler website](https://www2.baslerweb.com/en/downloads/software-downloads/software-pylon-7-4-0-linux-x86-64bit-debian/) to search versions, or use the command here:
+Download from the [Basler website](https://www2.baslerweb.com/en/downloads/software-downloads/software-pylon-7-4-0-linux-x86-64bit-debian/) to search versions.  Tested with version 7.4, but newer version should also work.  After downloading run these commands, for example with 7.4:
 ```bash
-wget https://www2.baslerweb.com/media/downloads/software/pylon_software/pylon_7_4_0_14900_linux_x86_64_debs.tar.gz
 tar -zxvf pylon_7_4_0_14900_linux_x86_64_debs.tar.gz 
 sudo dpkg -i pylon_7.4.0.14900-deb0_amd64.deb
 ```
@@ -93,7 +100,7 @@ make -j 8
 ```
 d# sudo nano /etc/security/limits.conf
 # add this line:
-# beesbook  -  nice    -20
+# <YOUR_USERNAME>  -  nice    -20
 ```
 
 Restart in order for changes in USB settings and permissions to take effect
