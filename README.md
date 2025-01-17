@@ -15,7 +15,7 @@ sudo apt install git cmake g++ libavcodec-dev libavformat-dev libavutil-dev libf
 ```
 ### Nvidia drivers, CUDA, and Video Codec SDK for ffmpeg
 
-Ensure that Nvidia drivers are installed (needed for hardware acceleration with ffmpeg).  CUDA is also needed.  There may be a newer driver than 550 available now.
+Ensure that Nvidia drivers are installed (needed for hardware acceleration with ffmpeg).  CUDA is also needed. 
 
 ```bash
 sudo add-apt-repository ppa:graphics-drivers/ppa
@@ -25,10 +25,14 @@ sudo reboot
 sudo apt install nvidia-cuda-toolkit
 ```
 
-On Ubuntu 24.04, the library libtinfo5 is needed.  Then install cuda-toolkit
+Install CUDA drivers (version 12.4), and a needed extra library for Ubuntu 24.04.  See instructions at [Nvidia - CUDA](https://developer.nvidia.com/cuda-12-4-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network), or simply run the commands here.  Note that newer versions of CUDA (i.e. higher than 12.4) will work for bb_imgacquisition.  However, since as of January 2025, (Pytorch)[https://pytorch.org/get-started/locally/] only supports pre-built binaries up to version 12.4, this version is recommended if you are also going to use the beesbook tracking software.
+
 ```bash
 wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb
+sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb. # needed for Ubuntu 24
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
 sudo apt install cuda-toolkit
 ```
 
