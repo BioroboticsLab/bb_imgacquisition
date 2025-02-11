@@ -29,7 +29,7 @@ Install CUDA drivers (version 12.4), and a needed extra library for Ubuntu 24.04
 
 ```bash
 wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
-sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb. # needed for Ubuntu 24
+sudo dpkg -i libtinfo5_6.3-2ubuntu0.1_amd64.deb # needed for Ubuntu 24
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
 sudo apt-get update
