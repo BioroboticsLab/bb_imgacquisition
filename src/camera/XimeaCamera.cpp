@@ -297,7 +297,8 @@ void XimeaCamera::run()
     auto lastCameraTimestamp = 0us;
 
     // Preallocate image buffer on stack in order to save performance later.
-    std::array<unsigned char, 3008 * 4112> imageBuffer;
+    // std::array<unsigned char, 3008 * 4112> imageBuffer;
+    std::vector<unsigned char> imageBuffer(3008 * 4112);    
 
     for (std::size_t loopCount = 0; !isInterruptionRequested(); loopCount += 1)
     {
