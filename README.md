@@ -76,7 +76,26 @@ Download and compile FFmpeg from source with the required packages enabled. If y
 ```bash
 git clone --depth 1 https://git.ffmpeg.org/ffmpeg.git ffmpeg
 cd ffmpeg
-./configure --prefix=/usr/local --enable-gpl --enable-nonfree --enable-libass --enable-libfreetype --enable-zlib --enable-libmp3lame --enable-libopus --enable-libvorbis --enable-libx264 --enable-libx265 --enable-libfdk-aac --extra-libs=-lpthread --extra-libs=-lm --enable-nvenc --enable-cuda-nvcc --enable-libnpp --extra-cflags=-I/usr/local/cuda/include --extra-ldflags=-L/usr/local/cuda/lib64
+./configure --prefix=/usr/local \
+            --enable-gpl \
+            --enable-nonfree \
+            --enable-libass \
+            --enable-libfreetype \
+            --enable-zlib \
+            --enable-libmp3lame \
+            --enable-libopus \
+            --enable-libvorbis \
+            --enable-libx264 \
+            --enable-libx265 \
+            --enable-libfdk-aac \
+            --enable-cuda \
+            --enable-cuvid \
+            --enable-nvenc \
+            --enable-libnpp \
+            --extra-cflags=-I/usr/local/cuda/include \
+            --extra-ldflags=-L/usr/local/cuda/lib64 \
+            --extra-ldflags=-L/usr/lib/x86_64-linux-gnu \
+            --extra-cflags=-I/usr/include
 make -j 8
 sudo make install
 cd ..
