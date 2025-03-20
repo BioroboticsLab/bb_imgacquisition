@@ -45,6 +45,8 @@ public:
     const std::string temporaryDirectory() const;
     const std::string outputDirectory() const;
 
+    static void setCustomConfigFile(const std::string& path);
+
 private:
     std::string _temporaryDirectory;
     std::string _outputDirectory;
@@ -52,4 +54,5 @@ private:
     std::map<std::string, std::string> _encoders;
 
     std::vector<Stream> _streams;
+    static std::string customConfigFile;
 };

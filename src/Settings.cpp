@@ -18,6 +18,11 @@
     #include "camera/BaslerCamera.hpp"
 #endif
 
+std::string Settings::customConfigFile = "";
+void Settings::setCustomConfigFile(const std::string& path) {
+    customConfigFile = path;
+}
+
 template<typename T>
 auto parseParam(const boost::property_tree::ptree& tree, const std::string& name)
     -> std::optional<Camera::Parameter<T>>
@@ -197,7 +202,14 @@ Settings::Settings()
         configLocation.mkpath(".");
     }
 
-    const auto configFilename = configLocation.absoluteFilePath("config.json").toStdString();
+    std::string configFilename;
+    if (!customConfigFile.empty()) {
+        configFilename = customConfigFile;
+    } else {
+        // Default behavior using QStandardPaths::AppConfigLocation
+        const auto configLocation = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+        configFilename = configLocation.absoluteFilePath("config.json").toStdString();
+    }
 
     std::fstream configFile;
     configFile.open(configFilename, std::ios::in);
