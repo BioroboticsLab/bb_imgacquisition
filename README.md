@@ -1,6 +1,6 @@
 # bb_imgacquisition with Basler Camera Support
 
-This is an edited version of bb_imgacquisition that includes support for Basler cameras. It is recommended to install the latest version of Pylon (currently 7.4 at the time of writing). The code also compiles with Pylon version 5 (tested with version 5.2).
+This is an edited version of bb_imgacquisition that includes support for Basler cameras. It is recommended to install the latest version of Pylon (currently 8.1.0 at the time of writing). The code also compiles with Pylon version 5 (tested with version 5.2).
 
 ## Instructions for compiling and running
 
