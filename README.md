@@ -25,7 +25,7 @@ sudo reboot
 sudo apt install nvidia-cuda-toolkit
 ```
 
-Install CUDA drivers (version 12.4), and a needed extra library for Ubuntu 24.04.  See instructions at [Nvidia - CUDA](https://developer.nvidia.com/cuda-12-4-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network), or simply run the commands here.  Note that newer versions of CUDA (i.e. higher than 12.4) will work for bb_imgacquisition.  However, since as of January 2025, (Pytorch)[https://pytorch.org/get-started/locally/] only supports pre-built binaries up to version 12.4, this version is recommended if you are also going to use the beesbook tracking software.
+Install CUDA drivers (version 12.8), and a needed extra library for Ubuntu 24.04.  See instructions at [Nvidia - CUDA](https://developer.nvidia.com/cuda-12-4-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network), or simply run the commands here.  As of May 2025, (Pytorch)[https://pytorch.org/get-started/locally/] supports up to version 12.8, so this version is recommended if you are also going to use the beesbook tracking software.
 
 ```bash
 wget https://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
