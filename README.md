@@ -20,7 +20,7 @@ Ensure that Nvidia drivers are installed (needed for hardware acceleration with 
 ```bash
 sudo add-apt-repository ppa:graphics-drivers/ppa
 sudo apt update
-sudo apt install nvidia-driver-550
+sudo apt install nvidia-driver-570
 sudo reboot
 sudo apt install nvidia-cuda-toolkit
 ```
