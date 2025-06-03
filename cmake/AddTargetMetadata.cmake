@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: BSD-3-Clause
 
 include(GetGitRevisionDescription)
 
@@ -13,13 +13,13 @@ function(add_target_metadata target)
 
 	if(ARG_SOURCE_VERSION)
 		file(WRITE "${METADATA_DIR}/source_version.hpp"
-"// SPDX-License-Identifier: GPL-3.0-or-later
+"// SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
 extern const char g_SOURCE_VERSION[];")
 
 		file(WRITE "${METADATA_DIR}/source_version.cpp.in"
-"// SPDX-License-Identifier: GPL-3.0-or-later
+"// SPDX-License-Identifier: BSD-3-Clause
 
 #include \"source_version.hpp\"
 
@@ -31,20 +31,20 @@ const char g_SOURCE_VERSION[] = \"@SOURCE_VERSION@\";")
 
 	if(ARG_BUILD_TIMESTAMP)
 		file(WRITE "${METADATA_DIR}/build_timestamp.hpp"
-"// SPDX-License-Identifier: GPL-3.0-or-later
+"// SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
 extern const char g_BUILD_TIMESTAMP[];")
 
 		file(WRITE "${METADATA_DIR}/build_timestamp.cpp.in"
-"// SPDX-License-Identifier: GPL-3.0-or-later
+"// SPDX-License-Identifier: BSD-3-Clause
 
 #include \"build_timestamp.hpp\"
 
 const char g_BUILD_TIMESTAMP[] = \"@BUILD_TIMESTAMP@\";")
 
 		file(WRITE "${METADATA_DIR}/ConfigureBuildTimestamp.cmake"
-"# SPDX-License-Identifier: GPL-3.0-or-later
+"# SPDX-License-Identifier: BSD-3-Clause
 
 string(TIMESTAMP BUILD_TIMESTAMP ${ARG_BUILD_TIMESTAMP})
 

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: BSD-3-Clause
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)

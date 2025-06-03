@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: BSD-3-Clause
 
 find_path(XIMEA_INCLUDE_DIR xiApi.h
           PATHS
