@@ -19,6 +19,15 @@ if [[ $# -ne 1 ]]; then
 fi
 
 CONFIG_FILE="$1"
+
+# Determine the real user invoking sudo, or fallback to current
+if [[ -n "${SUDO_USER-}" && "${SUDO_USER-}" != "root" ]]; then
+    SERVICE_USER="$SUDO_USER"
+else
+    SERVICE_USER="$(whoami)"
+fi
+SERVICE_GROUP="$SERVICE_USER"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_PATH="${SCRIPT_DIR}/build/bb_imgacquisition"
 CONFIG_PATH="${SCRIPT_DIR}/${CONFIG_FILE}"
@@ -50,8 +59,11 @@ RestartSec=30
 MemoryHigh=3G
 MemoryMax=4G
 # -----------------------------------
+User=${SERVICE_USER}
+Group=${SERVICE_GROUP}
 StandardOutput=append:${LOGDIR}/${CONFIG_FILE%.json}.log
 StandardError=append:${LOGDIR}/${CONFIG_FILE%.json}.log
+RestartSec=30
 TimeoutStopSec=40
 KillMode=control-group
 
