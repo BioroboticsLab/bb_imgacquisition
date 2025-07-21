@@ -161,8 +161,8 @@ sudo apt install libxcb-cursor0
 Installation notes are available at [XIMEA Linux Software Package](https://www.ximea.com/support/wiki/apis/ximea_linux_software_package).
 
 ```bash
-wget https://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz
-tar -zxvf XIMEA_Linux_SP.tgz
+wget  https://updates.ximea.com/public/ximea_linux_sp_beta.tgz
+tar xzf ximea_linux_sp_beta.tgz
 cd package
 bash install
 cd ..
