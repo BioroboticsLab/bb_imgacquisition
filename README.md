@@ -49,7 +49,7 @@ cd ..
 ### Install Pylon (Basler Cameras)
 
 Download and install Pylon for Basler cameras:
-Download from the [Basler website](https://www2.baslerweb.com/en/downloads/software-downloads/software-pylon-7-4-0-linux-x86-64bit-debian/) to search versions.  Tested with version 7.4, but newer version should also work.  After downloading run these commands, for example with 7.4:
+Download from the [Basler website](https://www2.baslerweb.com/en/downloads/software-downloads/software-pylon-7-4-0-linux-x86-64bit-debian/) to search versions.  Tested up to version 8.1.  Download the 'Debian Installer Package' with the correct architecture for your machine (x86 or ARM).  After downloading run these commands, for example with 7.4:
 ```bash
 tar -zxvf pylon_7_4_0_14900_linux_x86_64_debs.tar.gz 
 sudo dpkg -i pylon_7.4.0.14900-deb0_amd64.deb
