@@ -1,6 +1,7 @@
 ### The 3-Clause BSD License
 
 Copyright (c) 2020 Moritz Maxeiner
+Copyright (c) 2025 Jacob Davidson
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
