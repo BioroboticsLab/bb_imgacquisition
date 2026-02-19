@@ -131,18 +131,52 @@ Restart in order for changes in USB settings and permissions to take effect
 
 ## Running
 
-Execute the application for the first time:
+### Basic usage
+
+Run the application with a config file using the `-c` flag:
 
 ```bash
-cd build
-./bb_imgacquisition
+./build/bb_imgacquisition -c config.json
 ```
 
-The first time running will generate a blank `config.json` located at `~/.config/bb_imgacquisition/config.json`. This needs to be edited to include the camera serial numbers and other parameters. See the included `config.json` for an example that can be adapted.
+Without `-c`, it falls back to the default location `~/.config/bb_imgacquisition/config.json`. The first run generates a template config at the default path. Edit it to include camera serial numbers and other parameters. See the included `config.json` for an example.
 
-Note!  For high resolutions, the ffmpeg encoding only supports multiples of 64 (for example, 5312x4608).  Other resolutions will lead to jumbled videos due to the encoder. 
+Note!  For high resolutions, the ffmpeg encoding only supports multiples of 64 (for example, 5312x4608).  Other resolutions will lead to jumbled videos due to the encoder.
 
-Running for long times:  Use the script 'run_bb_imgacquisition.sh', to automatically restart with a date of crashes
+### Running multiple camera instances
+
+Create a separate config file for each camera (e.g., `config_cam1.json`, `config_cam2.json`).  Each instance runs as its own process, which allows multiple cameras to share GPU and RAM more efficiently than a single process handling all cameras:
+
+```bash
+./build/bb_imgacquisition -c config_cam1.json &
+./build/bb_imgacquisition -c config_cam2.json &
+```
+
+### Running as a systemd service (recommended)
+
+The `setup_bbimgacq_service.sh` script creates a systemd service for a given config file.  This is the recommended way to run in production.  The service runs at high priority (`Nice=-20`), automatically restarts on failure, and enforces memory limits (3 GB soft / 4 GB hard) as a safety check.
+
+Set up a service for each config file:
+
+```bash
+sudo ./setup_bbimgacq_service.sh config_cam1.json
+sudo ./setup_bbimgacq_service.sh config_cam2.json
+```
+
+This creates services named `bb_imgacq_config_cam1.service`, `bb_imgacq_config_cam2.service`, etc.  Manage them with standard systemd commands:
+
+```bash
+sudo systemctl start bb_imgacq_config_cam1.service
+systemctl status bb_imgacq_config_cam1.service
+journalctl -u bb_imgacq_config_cam1.service -f
+```
+
+Logs are written to the `logs/` directory in the project root.
+
+### Alternative: crash-restart loop script
+
+For a simpler setup without systemd, `run_bb_imgacquisition.sh` runs the application in an infinite loop at high priority and logs crash timestamps:
+
 ```bash
 ./run_bb_imgacquisition.sh
 ```
