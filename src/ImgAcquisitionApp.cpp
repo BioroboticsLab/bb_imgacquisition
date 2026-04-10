@@ -110,7 +110,14 @@ ImgAcquisitionApp::ImgAcquisitionApp(int& argc, char** argv)
     watchdogTimer->setInterval(500);
     watchdogTimer->setSingleShot(false);
     watchdogTimer->start();
-    connect(watchdogTimer, &QTimer::timeout, this, [this]() { _watchdog.check(); });
+    connect(watchdogTimer, &QTimer::timeout, this, [this]() {
+        try {
+            _watchdog.check();
+        } catch (const std::exception& e) {
+            logCritical("Watchdog: {}", e.what());
+            quit();
+        }
+    });
 
     auto* adapter = new PlatformAdapter(this);
     QObject::connect(adapter, &PlatformAdapter::interruptReceived, this, &ImgAcquisitionApp::quit);
