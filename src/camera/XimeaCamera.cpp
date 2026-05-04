@@ -113,11 +113,13 @@ void XimeaCamera::initCamera()
     enforce(xiSetParamInt(_Camera, XI_PRM_IMAGE_DATA_FORMAT, XI_RAW8),
             "xiSetParamInt XI_PRM_IMAGE_DATA_FORMAT");
 
-    // Deactivate downsampling.
-    if (tryAllXimeaCamSettings)
+    // Downsampling. Must be set before OFFSET/WIDTH/HEIGHT because it changes
+    // their valid range. When enabled, config.json's offset_x/offset_y/width/height
+    // must already reflect the post-downsample geometry.
+    if (_config.params.downsampling)
     {
-        enforce(xiSetParamInt(_Camera, XI_PRM_DOWNSAMPLING, 1),
-                "xiSetParamInt XI_PRM_IMAGE_DATA_FORMAT");
+        enforce(xiSetParamInt(_Camera, XI_PRM_DOWNSAMPLING, *_config.params.downsampling),
+                "xiSetParamInt XI_PRM_DOWNSAMPLING");
     }
 
     // Select configured properties.
@@ -162,10 +164,22 @@ void XimeaCamera::initCamera()
 
     if (auto* trigger = std::get_if<SoftwareTrigger>(&_config.params.trigger))
     {
-        if (xiSetParamInt(_Camera, XI_PRM_ACQ_TIMING_MODE, XI_ACQ_TIMING_MODE_FRAME_RATE) == XI_OK)
-        {
-            xiSetParamFloat(_Camera, XI_PRM_FRAMERATE, trigger->framesPerSecond);
-        }
+        // Use FRAME_RATE_LIMIT so the camera actually obeys the requested fps.
+        enforce(xiSetParamInt(_Camera,
+                              XI_PRM_ACQ_TIMING_MODE,
+                              XI_ACQ_TIMING_MODE_FRAME_RATE_LIMIT),
+                "xiSetParamInt XI_PRM_ACQ_TIMING_MODE (FRAME_RATE_LIMIT)");
+
+        enforce(xiSetParamFloat(_Camera, XI_PRM_FRAMERATE, trigger->framesPerSecond),
+                "xiSetParamFloat XI_PRM_FRAMERATE");
+
+        float actual_fps = 0.0f;
+        enforce(xiGetParamFloat(_Camera, XI_PRM_FRAMERATE, &actual_fps),
+                "xiGetParamFloat XI_PRM_FRAMERATE");
+        logInfo("{}: Requested {:.2f} fps; camera set to {:.2f} fps",
+                _imageStream.id,
+                trigger->framesPerSecond,
+                actual_fps);
 
         enforce(xiSetParamInt(_Camera, XI_PRM_TRG_SOURCE, XI_TRG_OFF),
                 "xiSetParamInt XI_PRM_TRG_SOURCE");
@@ -200,7 +214,7 @@ void XimeaCamera::initCamera()
     if (_config.params.exposure && _config.params.gain)
     {
         const auto autoExposure = std::holds_alternative<Parameter_Auto>(*_config.params.exposure);
-        const auto autoGain     = std::holds_alternative<Parameter_Auto>(*_config.params.exposure);
+        const auto autoGain     = std::holds_alternative<Parameter_Auto>(*_config.params.gain);
 
         if (autoExposure && autoGain)
         {

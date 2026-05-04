@@ -54,6 +54,7 @@ public:
 
         boost::optional<int> buffer_size;
         boost::optional<int> throughput_limit;
+        boost::optional<int> downsampling;
     };
 
     struct Config final

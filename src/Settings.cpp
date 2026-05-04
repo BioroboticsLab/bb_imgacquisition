@@ -272,6 +272,7 @@ Settings::Settings()
         stream.camera.params.buffer_size      = cameraParamsTree.get_optional<int>("buffer_size");
         stream.camera.params.throughput_limit = cameraParamsTree.get_optional<int>(
             "throughput_limit");
+        stream.camera.params.downsampling = cameraParamsTree.get_optional<int>("downsampling");
 
         stream.camera.offset_x = cameraTree.get<int>("offset_x");
         stream.camera.offset_y = cameraTree.get<int>("offset_y");
