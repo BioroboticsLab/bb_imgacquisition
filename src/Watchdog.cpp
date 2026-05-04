@@ -7,7 +7,7 @@ std::size_t Watchdog::watch(std::string id)
     auto       lock  = std::lock_guard(_mutex);
     const auto index = _ids.size();
     _ids.push_back(id);
-    _lastPulses.push_back({});
+    _lastPulses.push_back(std::chrono::steady_clock::now());
     return index;
 }
 
