@@ -91,7 +91,6 @@ cd ffmpeg
             --enable-cuda \
             --enable-cuvid \
             --enable-nvenc \
-            --enable-libnpp \
             --extra-cflags=-I/usr/local/cuda/include \
             --extra-ldflags=-L/usr/local/cuda/lib64 \
             --extra-ldflags=-L/usr/lib/x86_64-linux-gnu \
