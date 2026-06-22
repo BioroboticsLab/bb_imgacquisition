@@ -2,7 +2,9 @@
 
 #include <chrono>
 #include <fstream>
+#include <memory>
 #include <optional>
+#include <unordered_map>
 
 #include <boost/filesystem.hpp>
 
@@ -10,6 +12,7 @@
 // NOTE: The order of the includes below is important to avoid name clashes!
 #include "ImageStreamsWriter.hpp"
 
+#include "VideoEncoder.hpp"
 #include "VideoFileWriter.hpp"
 
 #include "util/format.hpp"
@@ -28,6 +31,12 @@ void ImageStreamsWriter::add(ImageStream imageStream)
 void ImageStreamsWriter::run()
 {
     const auto& settings = Settings::instance();
+
+    // Persistent video encoders, one per image stream id. The (hardware) encoder session is
+    // created once and reused across all output files of a stream instead of being created and
+    // destroyed per file. Re-creating a hardware encoder per file leaked driver memory and worker
+    // threads and was the cause of unbounded memory growth during long recordings.
+    std::unordered_map<std::string, std::unique_ptr<VideoEncoder>> encoders;
 
     while (!isInterruptionRequested())
     {
@@ -51,6 +60,50 @@ void ImageStreamsWriter::run()
         auto imageStream           = _imageStreams[maxSizeIndex];
         const auto [width, height] = imageStream.resolution;
 
+        // Surface a growing backlog (diagnostic only -- frames are never dropped; the queue
+        // buffers them). With a fast enough consumer the queue stays near empty and any temporary
+        // backlog drains. A persistently growing backlog means the consumer (encoder/disk) cannot
+        // keep up and memory will grow -- the signal to investigate consumer throughput.
+        const auto backlog = imageStream.size();
+        if (backlog > 2 * imageStream.framesPerFile)
+        {
+            logWarning("{}: encoder backlog {} frames (~{} MiB) buffered, consumer falling behind",
+                       imageStream.id,
+                       backlog,
+                       (backlog * width * height) / (1024 * 1024));
+        }
+        else
+        {
+            logDebug("{}: queue depth {} frames", imageStream.id, backlog);
+        }
+
+        // Get (or lazily create) the persistent encoder for this stream.
+        VideoEncoder* encoder = nullptr;
+        try
+        {
+            auto it = encoders.find(imageStream.id);
+            if (it == encoders.end())
+            {
+                it = encoders
+                         .emplace(imageStream.id,
+                                  std::make_unique<VideoEncoder>(VideoEncoder::Config{
+                                      static_cast<int>(width),
+                                      static_cast<int>(height),
+                                      {static_cast<int>(imageStream.framesPerSecond), 1},
+                                      {_encoderName, imageStream.encoderOptions}}))
+                         .first;
+                logInfo("{}: Created persistent video encoder [reuse+rebase+boundedq build]",
+                        imageStream.id);
+            }
+            encoder = it->second.get();
+        }
+        catch (const std::exception& e)
+        {
+            logCritical("{}: Failed to create video encoder: {}", imageStream.id, e.what());
+            usleep(500000);
+            continue;
+        }
+
         const auto startProcessingTime = std::chrono::system_clock::now();
 
         namespace fs = boost::filesystem;
@@ -62,14 +115,6 @@ void ImageStreamsWriter::run()
         }
 
         const auto tmpVideoFilename = tmpDir / fmt::format("{}.mp4", startProcessingTime);
-
-        // FIXME: framesPerSecond is a float, should be properly converted to rational
-        VideoFileWriter f(tmpVideoFilename.string(),
-                          {static_cast<int>(width),
-                           static_cast<int>(height),
-                           {static_cast<int>(imageStream.framesPerSecond), 1},
-                           {_encoderName, imageStream.encoderOptions}});
-        logDebug("{}: New video file", tmpVideoFilename);
 
         const auto tmpFrameTimestampsFilename = tmpDir /
                                                 fmt::format("{}.txt", startProcessingTime);
@@ -83,39 +128,84 @@ void ImageStreamsWriter::run()
         auto endFrameTime   = std::optional<std::chrono::system_clock::time_point>{};
 
         bool        imageStreamClosedEarly = false;
+        bool        encodingFailed         = false;
         std::size_t frameIndex             = 0;
-        for (; frameIndex < imageStream.framesPerFile; frameIndex++)
+
         {
-            ImageStream::Image img;
-            imageStream.pop(img);
-            if (img.data.empty())
+            // FIXME: framesPerSecond is a float, should be properly converted to rational
+            VideoFileWriter f(tmpVideoFilename.string(), *encoder);
+            logDebug("{}: New video file", tmpVideoFilename);
+
+            for (; frameIndex < imageStream.framesPerFile; frameIndex++)
             {
-                imageStreamClosedEarly = true;
-                break;
+                ImageStream::Image img;
+                imageStream.pop(img);
+                if (img.data.empty())
+                {
+                    imageStreamClosedEarly = true;
+                    break;
+                }
+
+                try
+                {
+                    f.write(img);
+                }
+                catch (const std::exception& e)
+                {
+                    logCritical("{}: Failed to encode frame {}: {}",
+                                tmpVideoFilename,
+                                frameIndex,
+                                e.what());
+                    encodingFailed = true;
+                    break;
+                }
+
+                if (frameIndex % debugInterval == 0)
+                {
+                    logDebug("{}: Wrote video frame {}", tmpVideoFilename, frameIndex);
+                }
+
+                if (!startFrameTime)
+                {
+                    startFrameTime = img.timestamp;
+                }
+                endFrameTime = img.timestamp;
+
+                if (frameTimestamps.is_open())
+                {
+                    frameTimestamps << fmt::format("{}_{:.6}\n", imageStream.id, img.timestamp);
+                    frameTimestamps.flush();
+                }
             }
 
-            f.write(img);
-
-            if (frameIndex % debugInterval == 0)
+            if (!encodingFailed)
             {
-                logDebug("{}: Wrote video frame {}", tmpVideoFilename, frameIndex);
+                try
+                {
+                    f.close();
+                }
+                catch (const std::exception& e)
+                {
+                    logCritical("{}: Failed to finalize video stream: {}",
+                                tmpVideoFilename,
+                                e.what());
+                    encodingFailed = true;
+                }
             }
+        } // VideoFileWriter destroyed here; the shared encoder is preserved.
 
-            if (!startFrameTime)
-            {
-                startFrameTime = img.timestamp;
-            }
-            endFrameTime = img.timestamp;
-
-            if (frameTimestamps.is_open())
-            {
-                frameTimestamps << fmt::format("{}_{:.6}\n", imageStream.id, img.timestamp);
-                frameTimestamps.flush();
-            }
-        }
-
-        f.close();
         frameTimestamps.close();
+
+        // An encoding error may have left the shared encoder session in an undefined state. Drop
+        // it so a fresh session is created for the next file instead of propagating the fault to
+        // every subsequent file. The partial tmp file is left behind and not promoted to output.
+        if (encodingFailed)
+        {
+            encoders.erase(imageStream.id);
+            logWarning("{}: Discarded video file and reset encoder after encoding error",
+                       tmpVideoFilename);
+            continue;
+        }
 
         if (!imageStreamClosedEarly)
         {

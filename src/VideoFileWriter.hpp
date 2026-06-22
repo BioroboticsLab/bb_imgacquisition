@@ -1,63 +1,50 @@
 // SPDX-License-Identifier: BSD-3-Clause
 #pragma once
 
+#include <cstdint>
 #include <string>
-#include <unordered_map>
 
 extern "C"
 {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <libavutil/opt.h>
-#include <libavutil/frame.h>
 }
 
 #include "GrayscaleImage.hpp"
+#include "VideoEncoder.hpp"
 
+/**
+ * @brief Writes a single output video file (container/muxer) using a shared, persistent
+ * VideoEncoder.
+ *
+ * One VideoFileWriter is created per output file. It owns only the per-file container state
+ * (AVFormatContext, the output stream and the I/O handle) and BORROWS the long-lived encoder
+ * session, which is deliberately NOT torn down when the file closes. This avoids creating and
+ * destroying a hardware encoder session for every file -- which leaked driver memory and worker
+ * threads and caused unbounded memory growth during long recordings.
+ */
 class VideoFileWriter final
 {
 public:
-    struct Config final
-    {
-        int width;
-        int height;
-
-        struct
-        {
-            int num;
-            int den;
-        } framerate;
-
-        struct
-        {
-            std::string                                  name;
-            std::unordered_map<std::string, std::string> options;
-        } codec;
-    };
-
-    VideoFileWriter(const std::string& filename, Config config);
+    VideoFileWriter(const std::string& filename, VideoEncoder& encoder);
     ~VideoFileWriter();
+
+    VideoFileWriter(const VideoFileWriter&) = delete;
+    VideoFileWriter& operator=(const VideoFileWriter&) = delete;
 
     void write(const GrayscaleImage& image);
     void close();
 
 private:
-    VideoFileWriter(Config config);
-
-    void encodeFrame(AVFrame* frame);
-
-    Config _cfg;
+    VideoEncoder& _encoder;
 
     std::string _filename;
 
     AVFormatContext* _formatContext;
+    AVStream*        _stream;
 
-    AVStream* _imageStream;
-
-    AVCodecContext* _codecContext;
-
-    AVFrame*  _videoFrame;
-    AVPacket* _videoPacket;
-
-    std::int64_t _videoFrameIndex;
+    // The encoder uses one continuous timestamp for the whole run; rebase this file's packets so
+    // each output file starts at zero. Captured from the first packet written to this file.
+    std::int64_t _dtsOffset;
+    bool         _firstFrame;
 };

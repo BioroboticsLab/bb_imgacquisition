@@ -49,6 +49,8 @@ add_executable(${PROJECT_NAME}
 	src/ImageStream.cpp
 	src/ImageStreamsWriter.hpp
 	src/ImageStreamsWriter.cpp
+	src/VideoEncoder.hpp
+	src/VideoEncoder.cpp
 	src/VideoFileWriter.hpp
 	src/VideoFileWriter.cpp
 	src/Watchdog.hpp
