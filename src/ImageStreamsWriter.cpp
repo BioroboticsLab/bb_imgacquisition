@@ -92,7 +92,7 @@ void ImageStreamsWriter::run()
                                       {static_cast<int>(imageStream.framesPerSecond), 1},
                                       {_encoderName, imageStream.encoderOptions}}))
                          .first;
-                logInfo("{}: Created persistent video encoder [reuse+rebase+boundedq build]",
+                logInfo("{}: Created persistent video encoder [reuse+rebase+lowlatency build]",
                         imageStream.id);
             }
             encoder = it->second.get();

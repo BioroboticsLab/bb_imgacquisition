@@ -121,15 +121,6 @@ VideoEncoder::VideoEncoder(Config config)
     if (isNvenc(codecName))
     {
         _codecContext->bit_rate = 0;
-
-        // The encoder session is reused across many output files. For each file to be a
-        // standalone, decodable clip we must be able to (a) force an IDR at the file boundary
-        // and (b) have NO frames buffered inside the encoder when we close a file. Configure
-        // zero output latency so that every avcodec_send_frame() yields exactly one packet
-        // immediately and nothing spills across the boundary.
-        av_opt_set(_codecContext->priv_data, "bf", "0", 0);           // no B-frames
-        av_opt_set(_codecContext->priv_data, "rc-lookahead", "0", 0); // no look-ahead
-        av_opt_set(_codecContext->priv_data, "delay", "0", 0);        // emit packets immediately
     }
 
     for (const auto& [name, value] : _cfg.codec.options)
@@ -154,10 +145,26 @@ VideoEncoder::VideoEncoder(Config config)
 
     if (isNvenc(codecName))
     {
-        // Keep forced-IDR enabled regardless of user options: it is what lets us start every
-        // output file with an IDR keyframe (see encode()), even with an (effectively) infinite
-        // GOP shared across files.
-        av_opt_set(_codecContext->priv_data, "forced-idr", "1", 0);
+        // The encoder session is REUSED across output files, so for each file to be a standalone,
+        // decodable clip the encoder must emit every frame's packet immediately with no internal
+        // buffering. Otherwise the tail frames of one file stay buffered and spill into the next
+        // file as undecodable cross-references ("Could not find ref with POC ..."), and the IDR we
+        // force at each file's first frame does not actually start that file.
+        //
+        // The default ("hq") tuning buffers several frames (look-ahead / B-frames / pipeline), so
+        // we force LOW-LATENCY tuning to make the encoder 1-in / 1-out. These are applied AFTER the
+        // user options above so a configured preset cannot re-enable buffering. (If "ll" still
+        // shows POC errors on some driver/ffmpeg builds, "ull" is the stricter fallback.)
+        //
+        // Note: low-latency tuning disables B-frames and look-ahead, slightly reducing compression
+        // efficiency. Verify output bitrate / tag readability after this change; rate control
+        // (rc / qp / cq / bitrate) can be set via the encoder options in the config without code
+        // changes if quality needs adjusting.
+        av_opt_set(_codecContext->priv_data, "tune", "ll", 0);        // low latency: immediate output
+        av_opt_set(_codecContext->priv_data, "bf", "0", 0);           // no B-frames (no reordering)
+        av_opt_set(_codecContext->priv_data, "rc-lookahead", "0", 0); // no look-ahead buffering
+        av_opt_set(_codecContext->priv_data, "delay", "0", 0);        // emit packets immediately
+        av_opt_set(_codecContext->priv_data, "forced-idr", "1", 0);   // honor forced IDR per file
     }
 
     if (auto r = avcodec_open2(_codecContext, codec, NULL); r < 0)
