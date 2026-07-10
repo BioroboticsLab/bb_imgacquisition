@@ -53,7 +53,8 @@ Type=simple
 WorkingDirectory=${SCRIPT_DIR}
 ExecStart=${BIN_PATH} -c ${CONFIG_PATH}
 Nice=-20
-Restart=on-failure
+# always, not on-failure: the watchdog exits 0 on camera timeout
+Restart=always
 RestartSec=30
 # ---- safety check in case of memory leak ----
 MemoryHigh=3G
